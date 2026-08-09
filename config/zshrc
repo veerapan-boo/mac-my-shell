@@ -1,0 +1,84 @@
+export PATH="$HOME/.local/bin:$PATH"
+export PATH="$HOME/.fzf/bin:$PATH"
+export PATH="$HOME/.cargo/bin:$PATH"
+
+# ---- History ----
+HISTFILE=~/.zsh_history
+HISTSIZE=100000
+SAVEHIST=100000
+setopt EXTENDED_HISTORY       # store timestamps
+setopt HIST_EXPIRE_DUPS_FIRST # trim dups first when trimming history
+setopt HIST_IGNORE_DUPS       # don't record a line if it's a dup of the previous
+setopt HIST_IGNORE_ALL_DUPS   # remove older dup when a new dup is added
+setopt HIST_FIND_NO_DUPS      # skip dups when searching history
+setopt HIST_IGNORE_SPACE      # don't record lines starting with a space
+setopt HIST_SAVE_NO_DUPS      # don't write dups to the history file
+setopt HIST_VERIFY            # expand history refs into the line, don't run immediately
+setopt SHARE_HISTORY          # share history live across all open shells
+setopt APPEND_HISTORY         # append rather than overwrite
+setopt INC_APPEND_HISTORY     # write each command as it's entered
+
+# ---- Completion ----
+fpath=("$HOME/.zsh/completions" $fpath)  # custom completions (e.g. _claude), must precede compinit
+autoload -Uz compinit
+# -U: skip the insecure-directory prompt for /usr/local/share/zsh, which is
+# owned by the admin account (macveerapan) on this machine, not this
+# non-admin user, so compaudit would otherwise hang waiting for input.
+compinit -u
+zstyle ':completion:*' menu no          # let fzf-tab render the menu instead of zsh's own
+zstyle ':completion:*' matcher-list 'm:{a-zA-Z}={A-Za-z}' # case-insensitive matching
+zstyle ':completion:*:descriptions' format '[%d]'
+zstyle ':completion:*' group-name ''
+
+# ---- fzf-tab ----
+# Interactive fuzzy-searchable Tab-completion menu (replaces zsh's plain list).
+# Must load after compinit but before plugins that wrap widgets (autosuggestions, syntax-highlighting).
+source "$HOME/.zsh/plugins/fzf-tab/fzf-tab.plugin.zsh"
+zstyle ':fzf-tab:*' switch-group ',' '.'
+zstyle ':fzf-tab:*' fzf-flags --height=60% --layout=reverse --border
+# cd: preview the target folder's contents (files/subfolders) as you arrow through matches
+zstyle ':fzf-tab:complete:cd:*' fzf-preview 'ls -1AG $realpath'
+zstyle ':fzf-tab:complete:__zoxide_z:*' fzf-preview 'ls -1AG $realpath'
+# kill/ps: preview full process info
+zstyle ':fzf-tab:complete:(kill|ps):argument-rest' fzf-preview '[[ $group == "[process ID]" ]] && ps -p $word -o pid,ppid,%cpu,%mem,command'
+
+# ---- zsh-history-substring-search ----
+# Up/Down arrows filter history by what you've already typed (fish-style)
+source "$HOME/.zsh/plugins/zsh-history-substring-search/zsh-history-substring-search.zsh"
+bindkey '^[[A' history-substring-search-up
+bindkey '^[[B' history-substring-search-down
+bindkey -M vicmd 'k' history-substring-search-up
+bindkey -M vicmd 'j' history-substring-search-down
+
+# ---- zsh-autosuggestions ----
+# Ghost-text suggestion as you type, from history + completions
+source "$HOME/.zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh"
+ZSH_AUTOSUGGEST_STRATEGY=(history completion)
+ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=8'
+bindkey '^ ' autosuggest-accept   # Ctrl+Space to accept full suggestion
+bindkey '^[[1;5C' forward-word    # Ctrl+Right to accept one word
+
+# ---- fzf (Ctrl+R fuzzy history, Ctrl+T fuzzy file, Alt+C fuzzy cd) ----
+# Note: fzf's own completion.zsh is intentionally NOT sourced — it rebinds Tab
+# to its own widget, which silently overrides fzf-tab's Tab binding above.
+# fzf-tab already fuzzy-filters every completion menu, making it redundant.
+source "$HOME/.fzf/shell/key-bindings.zsh"
+
+# ---- navi (fuzzy cheat-sheet: Ctrl+G pulls up popular command recipes,
+# e.g. typing "git config" then Ctrl+G surfaces "git config --global
+# user.name <name>" from the community cheatsheet repo, fills in the
+# placeholder, and inserts the finished command onto the prompt) ----
+command -v navi >/dev/null 2>&1 && eval "$(navi widget zsh)"
+
+# ---- zsh-syntax-highlighting (must be sourced LAST) ----
+source "$HOME/.zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh"
+
+# Regenerate ~/.zsh/completions/_claude from the current `claude --help`
+# output — run this after upgrading Claude Code so new/renamed flags show
+# up in Tab-completion.
+claude-refresh-completion() {
+  python3 "$HOME/.zsh/completions/generate-claude-completion.py" || return 1
+  unfunction _claude 2>/dev/null
+  autoload -Uz _claude
+  echo "claude completion refreshed"
+}
