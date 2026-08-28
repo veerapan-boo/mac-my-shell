@@ -95,5 +95,18 @@ else
   skip "_claude completion (claude CLI not on PATH yet)"
 fi
 
+# ---- ~/.config/wezterm ----
+WEZTERM_DIR="$HOME/.config/wezterm"
+mkdir -p "$WEZTERM_DIR/scripts"
+if [ -e "$WEZTERM_DIR/wezterm.lua" ] && ! cmp -s "$REPO_DIR/config/wezterm/wezterm.lua" "$WEZTERM_DIR/wezterm.lua"; then
+  backup="$WEZTERM_DIR/wezterm.lua.bak.$(date +%Y%m%d%H%M%S)"
+  log "backing up existing wezterm.lua to $backup"
+  cp "$WEZTERM_DIR/wezterm.lua" "$backup"
+fi
+cp "$REPO_DIR/config/wezterm/wezterm.lua" "$WEZTERM_DIR/wezterm.lua"
+cp "$REPO_DIR/config/wezterm/scripts/status.sh" "$WEZTERM_DIR/scripts/status.sh"
+chmod +x "$WEZTERM_DIR/scripts/status.sh"
+log "installed ~/.config/wezterm"
+
 echo
 log "done — open a new terminal, or run: source ~/.zshrc"
