@@ -1,9 +1,9 @@
 # mac-my-shell
 
-Personal zsh setup: smart autosuggestions, fuzzy Tab-completion, fuzzy history search,
-a custom `claude` CLI completion, and `navi`'s cheat-sheet picker. Everything installs
-under `$HOME` — no `sudo`, no Homebrew required, so it works the same on an admin or a
-non-admin macOS account.
+Personal zsh + terminal setup: smart autosuggestions, fuzzy Tab-completion, fuzzy history
+search, a custom `claude` CLI completion, `navi`'s cheat-sheet picker, and a themed WezTerm
+config. Everything installs under `$HOME` — no `sudo`, no Homebrew required, so it works the
+same on an admin or a non-admin macOS account.
 
 ## Quick start
 
@@ -33,6 +33,7 @@ takes a few minutes on a fresh machine.
 | Command syntax highlighting (valid = green, invalid = red) | zsh-syntax-highlighting | as you type |
 | Popular full-command recipes (e.g. `git config --global user.name <name>`) | navi + denisidoro/cheats | Ctrl+G |
 | `claude --<Tab>` shows every real flag and subcommand | generated `_claude` completion | Tab |
+| Custom-colored WezTerm tabs + CPU/RAM/DISK/time in the status bar | `config/wezterm/wezterm.lua` | on launch |
 
 ## Regenerating the `claude` completion
 
@@ -51,6 +52,8 @@ claude-refresh-completion
 - `install.sh` — idempotent bootstrap script; the only thing you run.
 - `config/zshrc` — copied to `~/.zshrc`.
 - `config/zsh/completions/generate-claude-completion.py` — copied to `~/.zsh/completions/`.
+- `config/wezterm/` — copied to `~/.config/wezterm/` (tab colors, retro tab bar, right-status
+  CPU/RAM/DISK/time script).
 
 Plugins, `fzf`, `navi`, and the cheat-sheet repo are **not** vendored here — `install.sh`
 clones/builds them fresh from upstream each time, so this repo stays small and always
