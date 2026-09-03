@@ -2,8 +2,11 @@
 
 Personal zsh + terminal setup: smart autosuggestions, fuzzy Tab-completion, fuzzy history
 search, a custom `claude` CLI completion, `navi`'s cheat-sheet picker, and a themed WezTerm
-config. Everything installs under `$HOME` — no `sudo`, no Homebrew required, so it works the
-same on an admin or a non-admin macOS account.
+config. Works on **macOS and Linux**. Everything installs under `$HOME` — no Homebrew, and
+no `sudo` on macOS. On Linux, `sudo` is used for exactly one thing: installing the `zsh`
+package itself (there's no sudo-free way to get a zsh binary onto the box) and switching
+the login shell to it. The WezTerm tab/status-bar config is macOS-only (assumes a local GUI
+terminal) and is skipped on Linux.
 
 ## Quick start
 
@@ -17,9 +20,10 @@ Re-running `install.sh` is safe — every step is skipped if its target already 
 If you already have a `~/.zshrc`, it's backed up to `~/.zshrc.bak.<timestamp>` before
 being replaced.
 
-`navi` has no prebuilt macOS binary, so the script installs a minimal, self-contained
-`rustup`/`cargo` toolchain under `~/.cargo` and builds it from source. That step alone
-takes a few minutes on a fresh machine.
+On Linux, `navi` is installed from its prebuilt release binary. On macOS there's no
+prebuilt binary, so the script installs a minimal, self-contained `rustup`/`cargo`
+toolchain under `~/.cargo` and builds it from source — that step alone takes a few
+minutes on a fresh machine.
 
 ## What you get
 
@@ -61,11 +65,17 @@ picks up current upstream versions.
 
 ## Design notes
 
-- No Homebrew, no `sudo`: everything lives under `$HOME` (`~/.zsh`, `~/.fzf`, `~/.cargo`,
-  `~/.local/share/navi`), so this works identically on a locked-down non-admin account.
+- No Homebrew: everything lives under `$HOME` (`~/.zsh`, `~/.fzf`, `~/.cargo`,
+  `~/.local/share/navi`, `~/.local/bin`), so this works identically on a locked-down
+  non-admin macOS account. On Linux, `zsh` itself comes from `apt` (`sudo` required) since
+  there's no `$HOME`-only way to get the binary; everything downstream of that is the same
+  sudo-free install as macOS.
 - `compinit -u` in `~/.zshrc` skips the insecure-directory prompt for zsh completion
-  dirs owned by another account (e.g. an admin user on a shared Mac) — otherwise
-  `compaudit` hangs waiting for interactive y/n input during shell startup.
+  dirs owned by another account (e.g. an admin user on a shared Mac, or root-owned system
+  completion dirs on Linux) — otherwise `compaudit` hangs waiting for interactive y/n
+  input during shell startup.
+- `~/.zshrc` picks the right `ls` color flag at load time (`-G` for BSD `ls` on macOS,
+  `--color=always` for GNU `ls` on Linux) so the same file works unmodified on both.
 - fzf's own `completion.zsh` is intentionally not sourced — it rebinds Tab and silently
   overrides fzf-tab's Tab binding. Only `key-bindings.zsh` (Ctrl+R/Ctrl+T/Alt+C) is used.
 - `navi repo add` shells out to navi's own git handling, which has been observed to hang

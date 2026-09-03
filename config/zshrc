@@ -2,6 +2,13 @@ export PATH="$HOME/.local/bin:$PATH"
 export PATH="$HOME/.fzf/bin:$PATH"
 export PATH="$HOME/.cargo/bin:$PATH"
 
+# BSD ls (macOS) colorizes with -G; GNU ls (Linux) wants --color instead.
+if ls --color=auto >/dev/null 2>&1; then
+  _LS_COLOR='--color=always'
+else
+  _LS_COLOR='-G'
+fi
+
 # ---- History ----
 HISTFILE=~/.zsh_history
 HISTSIZE=100000
@@ -21,9 +28,9 @@ setopt INC_APPEND_HISTORY     # write each command as it's entered
 # ---- Completion ----
 fpath=("$HOME/.zsh/completions" $fpath)  # custom completions (e.g. _claude), must precede compinit
 autoload -Uz compinit
-# -U: skip the insecure-directory prompt for /usr/local/share/zsh, which is
-# owned by the admin account (macveerapan) on this machine, not this
-# non-admin user, so compaudit would otherwise hang waiting for input.
+# -u: skip the insecure-directory prompt for zsh completion dirs owned by
+# another account (e.g. an admin account on a shared Mac, or root-owned
+# system completion dirs on Linux) — otherwise compaudit hangs on input.
 compinit -u
 zstyle ':completion:*' menu no          # let fzf-tab render the menu instead of zsh's own
 zstyle ':completion:*' matcher-list 'm:{a-zA-Z}={A-Za-z}' # case-insensitive matching
@@ -37,8 +44,8 @@ source "$HOME/.zsh/plugins/fzf-tab/fzf-tab.plugin.zsh"
 zstyle ':fzf-tab:*' switch-group ',' '.'
 zstyle ':fzf-tab:*' fzf-flags --height=60% --layout=reverse --border
 # cd: preview the target folder's contents (files/subfolders) as you arrow through matches
-zstyle ':fzf-tab:complete:cd:*' fzf-preview 'ls -1AG $realpath'
-zstyle ':fzf-tab:complete:__zoxide_z:*' fzf-preview 'ls -1AG $realpath'
+zstyle ':fzf-tab:complete:cd:*' fzf-preview "ls -1A $_LS_COLOR \$realpath"
+zstyle ':fzf-tab:complete:__zoxide_z:*' fzf-preview "ls -1A $_LS_COLOR \$realpath"
 # kill/ps: preview full process info
 zstyle ':fzf-tab:complete:(kill|ps):argument-rest' fzf-preview '[[ $group == "[process ID]" ]] && ps -p $word -o pid,ppid,%cpu,%mem,command'
 
